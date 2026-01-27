@@ -45,7 +45,19 @@ def perception_node(state: AgentState):
     try:
         logger.info("❯ 정전 관련 키워드 확인됨. LLM 분석을 시작합니다.")
         
-        extracted_data = {"date": "2026-01-28", "start": "04:00", "location": "5호관"}
+        prompt = ChatPromptTemplate.from_template(
+    """당신은 정전 공지 분석 전문가입니다. 다음 메일 본문에서 정전 정보를 정확히 추출하세요.
+
+[출력 규칙 - 반드시 지킬 것]
+1. 날짜(date)는 반드시 'YYYY-MM-DD' 형식으로만 출력하세요. (예: 2026-01-28)
+2. 시간(start, end)은 반드시 'HH:MM' 24시간 형식으로만 출력하세요. (예: 05:00, 22:10)
+
+메일 내용:{content}"""
+)
+        chain = prompt | model.with_structured_output(ResponseFormat)
+        result = chain.invoke({"content": email_content})
+        
+        extracted_data = result.model_dump() 
         
         logger.info(f"❯ 추출 성공: {extracted_data}")
         return {
