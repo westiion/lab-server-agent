@@ -34,11 +34,11 @@ def action_node(state: AgentState):
         
         try:
             success, message = execute_remote_shutdown(
-                ip=server['ip'],
+                ip_port=server['ip'],
                 username=ssh_user,
                 password=ssh_pw,
                 shutdown_time=shutdown_time,
-                simulate=True
+                simulate=False
             )
             
             if success:

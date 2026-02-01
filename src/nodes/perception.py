@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from src.state import AgentState
-from src.tools.gmail_tool import get_latest_shutdown_email
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +23,9 @@ def perception_node(state: AgentState):
     print()
     logger.info("--- [Perception Node] 지메일 분석 시작 ---")
 
-    msg_id, email_content = get_latest_shutdown_email()
+    email_data = state.get("email_data", {})
+    msg_id = email_data.get("msg_id")
+    email_content = email_data.get("email_content", "")
 
     if not email_content:
         logger.info("❯ 메일 본문 데이터를 확보하지 못했습니다.")
@@ -33,6 +34,8 @@ def perception_node(state: AgentState):
             "errors": ["Perception: 메일 수집 실패"],
             "next_step": "error_check"
         }
+    
+    logger.info(f"❯ 메일 ID: {msg_id} 분석 시작")
     keywords = ["정전", "전력 차단", "전기 점검", "전원 차단"]
     
     if not any(kw in email_content for kw in keywords):
@@ -57,7 +60,10 @@ def perception_node(state: AgentState):
         chain = prompt | model.with_structured_output(ResponseFormat)
         result = chain.invoke({"content": email_content})
         
-        extracted_data = result.model_dump() 
+        extracted_data = result.model_dump()
+
+        if msg_id:
+            extracted_data["msg_id"] = msg_id
         
         logger.info(f"❯ 추출 성공: {extracted_data}")
         return {

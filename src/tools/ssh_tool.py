@@ -1,33 +1,41 @@
 import time
 import logging
-from datetime import datetime
+import paramiko
 from src.scheduler import scheduler 
 
 logger = logging.getLogger(__name__)
 
-def execute_remote_shutdown(ip, username, password, shutdown_time, simulate=True):
-    command = f"sudo shutdown -h {shutdown_time}"
-    logger.info(f"❯ {ip} 접속 시도 중...")
-    time.sleep(1)
-    logger.info(f"❯ 명령어 전송 예정: '{command}'")
+def execute_remote_shutdown(ip_port, username, password, shutdown_time, simulate=True):
+    if ":" in ip_port:
+        ip, port = ip_port.split(':')
+        port=int(port)
+    else:
+        ip, port = ip_port, 22
 
-    if simulate:
-        logger.info(f"❯ {ip} 응답: 'System shutdown scheduled for {shutdown_time}.'")
+    command = f"shutdown -h {shutdown_time}"
+    logger.info(f"❯ {ip}:{port} 접속 시도 중... (계정: {username})...")
 
-        try:
-            run_date = f"{shutdown_time}:00"
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-            def final_shutdown_event():
-                logger.info(f"[REAL-TIME EVENT] {ip} 서버 전원이 완전히 차단되었습니다.")
+        ssh.connect(ip, port=port, username=username, password=password, timeout=5)
 
-            scheduler.add_job(final_shutdown_event, 'date', run_date=run_date)
-            logger.info(f"{shutdown_time}에 서버 종료 예약 완료")
+        if not simulate:
+            stdin, stdout, stderr = ssh.exec_command(command)
+            logger.info(f"❯ {ip}:{port} 명령어 전송 완료: '{command}'.")
+        else:
+            logger.info(f"❯ {ip}:{port} 접속 성공 확인.")
+        ssh.close()
 
-            return True, "Simulation Successful"
+        run_date=f"{shutdown_time}:00"
+        def final_shutdown_event():
+            logger.info(f"{ip}:{port} 서버 전원이 완전히 차단되었습니다.")
+        
+        scheduler.add_job(final_shutdown_event, 'date', run_date=run_date)
+        return True, "Success"
 
-        except Exception as e:
-            error_msg = f"서버 종료 예약 실패: {str(e)}"
-            logger.error(f"{error_msg}")
-            return False, error_msg 
-
-    return True, "Success"
+    except Exception as e:
+        error_msg=f"{ip_port} 연결 실패: {str(e)}"
+        logger.error(f"❯ {error_msg}")
+        return False, error_msg
