@@ -1,31 +1,16 @@
-# --- Python 관련 ---
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .venv/
 env/
-
-# --- 보안 및 인증 (절대 올리면 안 됨!) ---
-# 지메일 API 인증 파일
 credentials.json
 token.json
-
-# 환경 변수 파일 (나중에 쓸 수도 있음)
 .env
-
-# --- 에이전트 기록 및 상태 ---
-# 이미 처리한 메일 목록 (내 로컬 환경의 기록)
 processed_ids.txt
-
-# 에이전트 활동 로그
 agent_log.txt
-
-# --- IDE (개발 도구) 관련 ---
 .vscode/
 .idea/
 *.swp
-
-# --- OS 관련 ---
 .DS_Store
 Thumbs.db
