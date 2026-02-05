@@ -8,11 +8,12 @@ logger = logging.getLogger(__name__)
 def execute_remote_shutdown(ip_port, username, password, shutdown_time, simulate=True):
     if ":" in ip_port:
         ip, port = ip_port.split(':')
-        port=int(port)
+        port = int(port)
     else:
         ip, port = ip_port, 22
 
-    command = f"shutdown -h {shutdown_time}"
+    time_only = shutdown_time.split(' ')[1] if ' ' in shutdown_time else shutdown_time
+    command = command = f"sudo shutdown -h {time_only} '한국 시간 {time_only}에 서버를 종료합니다.'"
     logger.info(f"❯ {ip}:{port} 접속 시도 중... (계정: {username})...")
 
     try:
@@ -28,7 +29,7 @@ def execute_remote_shutdown(ip_port, username, password, shutdown_time, simulate
             logger.info(f"❯ {ip}:{port} 접속 성공 확인.")
         ssh.close()
 
-        run_date=f"{shutdown_time}:00"
+        run_date = f"{shutdown_time}:00"
         def final_shutdown_event():
             logger.info(f"{ip}:{port} 서버 전원이 완전히 차단되었습니다.")
         
@@ -36,6 +37,6 @@ def execute_remote_shutdown(ip_port, username, password, shutdown_time, simulate
         return True, "Success"
 
     except Exception as e:
-        error_msg=f"{ip_port} 연결 실패: {str(e)}"
+        error_msg = f"{ip_port} 연결 실패: {str(e)}"
         logger.error(f"❯ {error_msg}")
         return False, error_msg

@@ -28,9 +28,9 @@ def get_gmail_service(): # 구글 서버로부터 인증된 서비스 객체를 
 def get_unprocessed_shutdown_emails(processed_ids: set): # 처리되지 않은 모든 메일 가져오기
     try:
         service = get_gmail_service()
-        search_query = '("정전" OR "전력 차단" OR "전기 점검" OR "전원 차단" OR "안전 점검", "전기 공급 차단", "단전") -label:SENT -label:DRAFT'
+        search_query = '("정전" OR "전력 차단" OR "전기 점검" OR "전원 차단" OR "안전 점검" OR "전기 공급 차단" OR "단전") -label:SENT -label:DRAFT'
         
-        results = service.users().messages().list(userId='me', q=search_query, maxResults=50).execute()
+        results = service.users().messages().list(userId='me', q=search_query, maxResults=5).execute()
         messages = results.get('messages', [])
 
         if not messages: 
